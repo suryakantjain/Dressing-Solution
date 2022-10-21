@@ -1,7 +1,13 @@
-﻿namespace Dressing.Domain.Model.Dressings
+﻿using Dressing.Domain.Model.Rules;
+
+namespace Dressing.Domain.Model.Dressings
 {
     public class HotDressing : AbstractDressing
     {
+        public HotDressing(IRuleValidator ruleValidator) : base(ruleValidator)
+        {
+        }
+
         protected override IReadOnlyDictionary<int, string> BuildAvailableDresses()
         {
             var dresses = new Dictionary<int, string>();

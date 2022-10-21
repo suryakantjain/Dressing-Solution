@@ -1,6 +1,7 @@
 ﻿using Dressing.Domain.Model.Commands;
 using Dressing.Domain.Model.Dressings;
 using Dressing.Domain.Model.Reports;
+using Dressing.Domain.Model.Rules;
 using NSubstitute;
 using System;
 using System.Collections.Generic;
@@ -17,6 +18,7 @@ namespace Dressing.UnitTests.Commands
         private ICommandInvoker invoker;
         private IDressingFactory factory;
         private IDressingReport report;
+        private IRuleValidator ruleBuilder;
 
         private IEnumerable<ICommand> commands;
 
@@ -26,12 +28,14 @@ namespace Dressing.UnitTests.Commands
             invoker = Substitute.For<ICommandInvoker>();
             factory = Substitute.For<IDressingFactory>();
             report = Substitute.For<IDressingReport>();
+            ruleBuilder = Substitute.For<IRuleValidator>();
         }
 
         [Fact]
         public void GivenValidCommandString_PrintReport()
         {
             //Arrange
+            Setup();
             string commandString = "HOT 8, 6, 4, 2, 1, 7";
             string temperatureType = "HOT";
             commands = new List<ICommand>
@@ -46,7 +50,7 @@ namespace Dressing.UnitTests.Commands
 
             parser.Parse(commandString).Returns(commands);
             parser.TemperatureType.Returns(temperatureType);
-            HotDressing dressing = new HotDressing();
+            HotDressing dressing = new HotDressing(ruleBuilder);
             factory.Create(temperatureType).Returns(dressing);
 
             //Act

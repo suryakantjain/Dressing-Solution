@@ -1,4 +1,5 @@
-﻿using System.Net.Http.Headers;
+﻿using Dressing.Domain.Model.Rules;
+using System.Net.Http.Headers;
 
 namespace Dressing.Domain.Model.Dressings
 {
@@ -22,19 +23,63 @@ namespace Dressing.Domain.Model.Dressings
 
         private IReadOnlyDictionary<int, string> availableDresses;
         private ISet<string> dressings = new HashSet<string>();
+        private readonly IRuleValidator validator;
 
         public IEnumerable<string> Dressings => dressings;
 
-        public AbstractDressing()
+        public AbstractDressing(IRuleValidator ruleValidator)
         {
-            availableDresses = BuildAvailableDresses();
+            validator = ruleValidator;
+            validator.BuildRules(this);
+            availableDresses = BuildAvailableDresses();            
         }
 
         protected abstract IReadOnlyDictionary<int, string> BuildAvailableDresses();
         public void DressUp(int dressCode)
         {
+            EnsureValidDressCode(dressCode);
             var dress = availableDresses[dressCode];
+            EnsureSatisfyRules(dress);
             dressings.Add(dress);
+        }
+
+        public bool IsDressedUp(string dress)
+        {
+            return dressings.Contains(dress);
+        }
+
+        public bool IsPajamaTakenOff()
+        {
+            return dressings.Any() && dressings.First() == Dresses.REMOVING_PAJAMA;
+        }
+
+        public bool IsReadyToLeave()
+        {
+            var dresses = availableDresses.Values;
+            var result = dresses.Except(dressings);
+            return result.Count() == 1 && result.Contains(Dresses.LEAVE_HOUSE);
+        }
+
+        private void EnsureValidDressCode(int dressCode)
+        {
+            if (!availableDresses.ContainsKey(dressCode))
+            {
+                ThrowError();
+            }
+        }
+
+        private void EnsureSatisfyRules(string dress)
+        {
+            if (!validator.Verify(dress))
+            {
+                ThrowError();
+            }
+        }
+
+        private void ThrowError()
+        {
+            dressings.Add("fail");
+            throw new DressingException();
         }
     }
 }

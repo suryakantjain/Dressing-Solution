@@ -30,7 +30,14 @@ namespace Dressing.Domain.Model.Commands
 
             foreach (var command in commands)
             {
-                command.Execute(dressing);
+                try
+                {
+                    command.Execute(dressing);
+                }
+                catch (DressingException)
+                {
+                    break;
+                }                
             }
         }
     }
